@@ -1,37 +1,36 @@
-    const fs = require('fs')
-    const querystring = require('querystring')
-    const { readHeader, readFooter } = require('./fileUtils.js')
-    const { connection } = require('./database.js')
+    const fs = require('fs'),
+        path = require('path'),
+        querystring = require('querystring'),
+        { readHeader, readFooter } = require('./fileUtils.js'),
+        { connection } = require('./database.js')
 
     const routes = {
     '/': async (req, res) => {
         readHeader(header => {
-        res.write(header)
+            res.write(header)
+            fs.readFile("./../PUBLIC/index.html", (err, data) => {
+                if (err) throw err
+                res.write(data)
 
-        fs.readFile("./../PUBLIC/index.html", (err, data) => {
-            if (err) throw err
-            res.write(data)
-
-            readFooter(footer => {
-                res.write(footer)
-                res.end("")
+                readFooter(footer => {
+                    res.write(footer)
+                    res.end("")
+                })
             })
-        })
         })
     },
     '/home': async (req, res) => {
         readHeader(header => {
-        res.write(header)
+            res.write(header)
+            fs.readFile("./../PUBLIC/index.html", (err, data) => {
+                if (err) throw err
+                res.write(data)
 
-        fs.readFile("./../PUBLIC/index.html", (err, data) => {
-            if (err) throw err
-            res.write(data)
-
-            readFooter(footer => {
-                res.write(footer)
-                res.end("")
+                readFooter(footer => {
+                    res.write(footer)
+                    res.end("")
+                })
             })
-        })
         })
     },
     '/contact': async (req, res) => {
@@ -52,10 +51,10 @@
     '/process': async (req, res) => {
         let data = ''
         req.on('data', chunk => {
-        data += chunk.toString()
+            data += chunk.toString()
         })
         req.on('end', () => {
-            const formData = querystring.parse(body),       
+            const formData = querystring.parse(data),       
             dataString = `Nombre: ${formData.name}\nCorreo: ${formData.email}\nMensaje: ${formData.message}\n`
 
             files.appendFile('./../REGISTER/datos.txt', dataString, (err) => {
@@ -74,58 +73,50 @@
             })
         })
     },
-    '/about': async (req, res) => {
+    '/catalog': async (req, res) => {
         readHeader(header => {
-        res.write(header)
-
-        fs.readFile("./../PUBLIC/ASSETS/HTML/about.html", (err, data) => {
-            if (err) throw err
-            res.write(data)
-
-            readFooter(footer => {
-                res.write(footer)
-                res.end("")
+            res.write(header)
+                
+                    connection.query(`
+                            SELECT * FROM catalog
+                        `, (err, result, fields) => {
+                        if (err) throw err
+                        res.write(`<div class="container"><div class="row">`)
+                        for (let i = 0; i < result.length; i++) {                            
+                            res.write(`
+                                <div class="col-md-4 mb-4">
+                                    <div class="card">
+                                        <img src="PUBLIC/ASSETS/MEDIA/IMGS/${result[i].image_name}" class="card-img-top" alt="Producto ${i + 1}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Producto ${i + 1}</h5>
+                                            <p class="card-text">${result[i].description}</p>
+                                            <p class="card-text">Precio: $${result[i].price}</p>
+                                            <a href="#" class="btn btn-primary">Ver detalles</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `)
+                        }
+                        res.write(`</div></div>`)
+                    })
+                    readFooter(footer => {
+                        res.write(footer)
+                        res.end("")
+                    })
             })
-        })
-        })
-    },
-    '/blog': async (req, res) => {
-        readHeader(header => {
-        res.write(header)
-
-        fs.readFile("./../PUBLIC/ASSETS/HTML/blog.html", (err, data) => {
-            if (err) throw err
-            res.write(data)
-
-            connection.query(`SELECT * FROM entries`, (err, result, fields) => {
-            if (err) throw err
-            for (let i = 0; i < result.length; i++) {
-                res.write(`
-                <article>
-                    <h3>${result[i].titulo}</h3>
-                    <time>${result[i].fecha}</time>
-                    <p>${result[i].texto}</p>
-                </article>
-                `)
-            }
-
-            readFooter(footer => {
-                res.write(footer)
-                res.end("")
-            })
-            })
-        });
-        })
     },
     'default': async (req, res) => {
-        fs.readFile("./../PUBLIC/ASSETS/HTML/notfound.html", (err, data) => {
-        if (err) throw err
-        res.write(data)
-
-        readFooter(footer => {
-            res.write(footer)
-            res.end("")
-        })
+        readHeader(header => {
+            res.write(header)
+            fs.readFile("./PUBLIC/ASSETS/HTML/notfound.html", (err, data) => {
+                if (err) throw err
+                res.write(data)
+        
+                readFooter(footer => {
+                    res.write(footer)
+                    res.end("")
+                })
+                })
         })
     },
     }

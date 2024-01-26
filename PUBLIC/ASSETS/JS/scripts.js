@@ -1,9 +1,4 @@
-console.log("AAA")
-console.log(document)
-
-
 const d = document
-
 
 d.addEventListener("DOMContentLoaded", e => {
     setMenuActiveLink()
